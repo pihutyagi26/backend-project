@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const viedoSchema = new Schema(
     {
@@ -42,5 +43,7 @@ const viedoSchema = new Schema(
     }
 
 )
+
+viedoSchema.plugin(mongooseAggregatePaginate)
 
 export const Viedo = mongoose.model("Viedo" , viedoSchema)
