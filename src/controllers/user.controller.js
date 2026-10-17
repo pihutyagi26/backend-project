@@ -3,6 +3,8 @@ import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken"
+import { trusted } from "mongoose";
 
 const genrateAccessAndRefreshToken = async(userId)=>{
   try {
@@ -21,8 +23,6 @@ const genrateAccessAndRefreshToken = async(userId)=>{
     throw new ApiError(500, "Something went wrong while genrating tokens")
   }
 }
-
-
 
 const registerUser = asyncHandler(async (req, res) => {
   // get user details from frontend
@@ -184,10 +184,58 @@ const logoutUSer = asyncHandler(async(req, res) =>{
 
 })
 
+const refreshAccessToken = asyncHandler(async(req , res) =>{
+  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+  if(!incomingRefreshToken){
+    throw new ApiError(401 , "Unauthorized request")
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    )
+  
+    const user = await User.findById(decodedToken?._id)
+  
+    if(!user){
+      throw new ApiError(401 , "invalid refresh token")
+    }
+  
+    if(incomingRefreshToken !== user?.refreshToken){
+      throw new ApiError(401 , "refresh  token is expired or used")
+    }
+  
+    const options = {
+      httpOnly:true,
+      secure:true
+    }
+  
+    const {accessToken , newRefreshToken} = await genrateAccessAndRefreshToken(user._id)
+  
+    return res
+    .status(200)
+    .cokkie("accessToken" , accessToken, options)
+    .cokkie("refreshToken" , newRefreshToken, opitons)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          accessToken, refreshToken : newRefreshToken
+        },"Access Token refreshed succusfully"
+      )
+    )
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid refresh token")
+  }
+
+})
 
 
 export { 
   registerUser,
   logInUser,
-  logoutUSer
+  logoutUSer,
+  refreshAccessToken
  };
