@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
-import { trusted } from "mongoose";
+
 
 const genrateAccessAndRefreshToken = async(userId)=>{
   try {
@@ -216,13 +216,13 @@ const refreshAccessToken = asyncHandler(async(req , res) =>{
   
     return res
     .status(200)
-    .cokkie("accessToken" , accessToken, options)
-    .cokkie("refreshToken" , newRefreshToken, opitons)
+    .cookie("accessToken" , accessToken, options)
+    .cookie("refreshToken" , newRefreshToken, options)
     .json(
       new ApiResponse(
         200,
         {
-          accessToken, refreshToken : newRefreshToken
+          accessToken, newrefreshToken : newRefreshToken
         },"Access Token refreshed succusfully"
       )
     )
