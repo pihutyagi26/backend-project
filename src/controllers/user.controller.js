@@ -67,8 +67,6 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Avatar file is missing");
   }
 
-
-
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
   if (!avatar?.url) {
@@ -78,13 +76,6 @@ const registerUser = asyncHandler(async (req, res) => {
   const coverImage = coverImageLocalPath
     ? await uploadOnCloudinary(coverImageLocalPath)
     : null;
-
-
-
-  if (!avatar) {
-    throw new ApiError(400, "Avatar file is required")
-  }
-
 
   const user = await User.create({
     fullName,
@@ -346,6 +337,78 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
 })
 
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params
+
+  if (!username?.trim()) {
+    throw new ApiError(400, "username is missing")
+  }
+
+  const channel = await User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase()
+      }
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subcribers"
+      }
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subcriberedTo"
+      }
+    },
+    {
+      $addFields:{
+        subscribersCount : {
+          $size : "$subcribers"
+        },
+        channelSubscribedToCount:{
+          $size : "$subcriberedTo"
+        },
+        isSubscribed:{
+          $cond : {
+            if: {$in:[req.user?._id, "$subcribers.subscriber"]},
+            then : true,
+            else: false
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        fullName:1,
+        username :1,
+        subscribersCount:1,
+        channelSubscribedToCount:1,
+        isSubscribed:1,
+        avatar :1,
+        coverImage :1,
+        email:1
+      }
+    }
+  ])
+
+  if(!channel?.length){
+    throw new ApiError(404 , "channel does not exists")
+  }
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200 , channel[0] , "user channel fetched successfully")
+  )
+})
+
+
 
 export {
   registerUser,
@@ -356,5 +419,6 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
+  getUserChannelProfile
 };
