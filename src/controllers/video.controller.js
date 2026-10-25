@@ -150,7 +150,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     }
 
     return res
-        .ststus(200)
+        .status(200)
         .json(
             new ApiResponse(
                 200,
@@ -200,7 +200,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         video.thumbnail = uploadedThumbnail.url
     }
 
-    await Video.save()
+    await video.save()
 
     return res
         .status(200)
@@ -219,7 +219,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
     if (!mongoose.isValidObjectId(videoId)) {
         throw new ApiError(400, "Inavalid video id")
     }
-    const video = await Video.findOne(videoId);
+    const video = await Video.findById(videoId);
 
     if (!video) {
         throw new ApiError(400, "video doesn't exist")
