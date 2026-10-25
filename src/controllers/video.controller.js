@@ -229,7 +229,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, " You are not allowed to delete this viedo")
     }
 
-    await VideofindByIdAndDelete(videoId);
+    await Video.findByIdAndDelete(videoId);
 
     return res.status(200)
         .json(
