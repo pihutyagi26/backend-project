@@ -16,7 +16,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     }
 
     if (subscriber.toString() === channelId.toString()) {
-        throw new ApiError(400, "you can'y subscribe to your own channel")
+        throw new ApiError(400, "you can't subscribe to your own channel")
     }
 
     const channel = await User.findById(channelId);
@@ -52,11 +52,40 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const { channelId } = req.params
+
+    if(!mongoose.isValidObjectId(channelId)){
+        throw new ApiError(400,"Inavlid id")
+    }
+
+    const subscriber = await Subscription.find({
+        channel : channelId
+    }).populate("subscriber","username fullnName avatar")
+
+    return res.status(200).json(
+        new ApiResponse(200,subscriber, "Subscriber fetched successfully")
+    )
 })
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
+
+    console.log("Route params:", req.params);
     const { subscriberId } = req.params
+    
+
+    if(!mongoose.isValidObjectId(subscriberId)){
+        throw new ApiError(400,"Inavlid subscriber id")
+    }
+
+    const subscribed = await Subscription.find({
+        subscriber : subscriberId
+    }).populate("channel" , "username fullName avatar")
+
+    return res.status(200).json(
+        new ApiResponse(
+            200, subscribed,"subscribed channel fetched"
+        )
+    )
 })
 
 export {
