@@ -1,12 +1,12 @@
-import mongoose from "mongoose";
+import mongoose,{Schema} from "mongoose";
 
 const likeSchema = new Schema(
     {
-        viedo : {
+        video : {
             type : Schema.Types.ObjectId,
             ref : "Viedos"
         },
-        Comment: {
+        comment: {
             type : Schema.Types.ObjectId,
             ref : "Comment"
         },
